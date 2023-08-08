@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<robot name="hoverboard_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="materials.xacro" />
+    <xacro:include filename="macros.xacro" />
+    <xacro:include filename="wheels.xacro" />
+    <xacro:include filename="ros2_control.xacro" />
+
+    <xacro:property name="plate_radius" value="0.37" />
+    <xacro:property name="plate_height" value="0.01" />
+
+    <xacro:property name="chassis_weight" value="1.0" />
+
+    <xacro:property name="driving_wheel_diameter" value="0.165" />
+    <xacro:property name="driving_wheel_thickness" value="0.045" />
+    <xacro:property name="driving_wheel_weight" value="2.2" />
+    <xacro:property name="driving_wheel_base_gap" value="0.01" />
+
+    <xacro:property name="caster_wheel_diameter" value="0.09" />
+    <xacro:property name="caster_wheel_weight" value="0.1" />
+
+    <link name="base_link">
+    </link>
+
+    <link name="plate">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${pi/2}"/>
+            <geometry>
+                <mesh filename="package://hoverboard_demo_description/meshes/plate.stl" scale="0.001 0.001 0.001"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 -${pi/2}"/>
+            <geometry>
+                <cylinder radius="${plate_radius}" length="${plate_height}"/>
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertia m="0.5" r="${plate_radius}" h="${plate_height}" roll="${pi/2}"/>
+    </link>
+
+    <joint name="base_link_plate_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <parent link="base_link" />
+        <child link="plate" />
+    </joint>
+
+    <xacro:driving_wheel suffix="left" reflect="1"/>
+    <xacro:driving_wheel suffix="right" reflect="-1"/>
+
+    <xacro:caster_wheel suffix="front" reflect="1" />
+    <xacro:caster_wheel suffix="back" reflect="-1" />
+
+    <xacro:hoverboard_ros2_control name="Hoverboard" />
+
+</robot>
