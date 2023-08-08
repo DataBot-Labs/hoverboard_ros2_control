@@ -9,7 +9,7 @@
         <param name="left_wheel_joint_name">driving_wheel_left_joint</param>
         <param name="right_wheel_joint_name">driving_wheel_right_joint</param>
         <param name="loop_rate">50</param>
-        <param name="device">/dev/ttyUSB1</param>
+        <param name="device">/dev/ttyUSB0</param>
         <param name="baud_rate">115200</param>
         <param name="timeout">1000</param>
         <param name="encoder_ticks_per_revolution">90</param>

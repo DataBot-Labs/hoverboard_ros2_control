@@ -40,7 +40,7 @@ typedef struct {
 } MotorWheelFeedback;
 
 typedef struct {
-    uint16_t head;
+    uint16_t head = HEAD_FRAME;
     int16_t  steer;
     int16_t  speed;
     uint16_t checksum;

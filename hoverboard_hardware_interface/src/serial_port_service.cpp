@@ -71,38 +71,23 @@ void SerialPortService::read()
     
     for (unsigned int i = 0; i < bytes_transferred; ++i) {
 
-        head_frame = ((uint8_t) prev_byte << 8) | read_buf_raw[i];
+        head_frame = ((uint16_t)(read_buf_raw[i]) << 8) | (uint8_t) prev_byte;
 
         if (head_frame == HEAD_FRAME)
         {
-            usableReadBuffer.clear();
-            msg_counter = 1;
+            p = (char*) &motorWheelFeedback;
+            *p++ = prev_byte;
+            *p++ = read_buf_raw[i];
+            msg_counter = 2;
         }
-
-        if (msg_counter > 0)
-        {
-            usableReadBuffer.push_back((uint8_t) read_buf_raw[i]);
-
+        else if (msg_counter >= 2 && msg_counter < sizeof(MotorWheelFeedback)) {
+            *p++ = read_buf_raw[i];
             msg_counter++;
         }
 
-        if (usableReadBuffer.size() >= 3 && usableReadBuffer.size() == usableReadBuffer[3] + 5)
+        if (msg_counter == sizeof(MotorWheelFeedback))
         {
-            if ((uint8_t) usableReadBuffer[2] == HEARTBEAT_PACKAGE_CMD)
-            {
-                motorWheelFeedback.leftMotorEncoderCumulativeCount = (usableReadBuffer[6] << 8) | usableReadBuffer[7];
-                motorWheelFeedback.rightMotorEncoderCumulativeCount = (usableReadBuffer[4] << 8) | usableReadBuffer[5];
-                motorWheelFeedback.leftMotorSpeed = (usableReadBuffer[10] << 8) | usableReadBuffer[11];
-                motorWheelFeedback.rightMotorSpeed = (usableReadBuffer[8] << 8) | usableReadBuffer[9];
-                motorWheelFeedback.leftMotorCurrent = (usableReadBuffer[14] << 8) | usableReadBuffer[15];
-                motorWheelFeedback.rightMotorCurrent = (usableReadBuffer[12] << 8) | usableReadBuffer[13];
-                motorWheelFeedback.leftMotorTemperature = (usableReadBuffer[18] << 8) | usableReadBuffer[19];
-                motorWheelFeedback.rightMotorTemperature = (usableReadBuffer[16] << 8) | usableReadBuffer[17];
-
-                // TODO: add the rest of parameters
-
-                motorWheelFeedbackCallback(motorWheelFeedback);
-            }
+            motorWheelFeedbackCallback(motorWheelFeedback);
 
             msg_counter = 0;
         }
@@ -139,7 +124,7 @@ void SerialPortService::onReceive(const boost::system::error_code& ec, size_t by
     // }
 }
 
-int SerialPortService::write(std::vector<uint8_t> & message)
+int SerialPortService::write(const char * message, const int & size)
 {
     boost::system::error_code ec;
 
@@ -148,23 +133,11 @@ int SerialPortService::write(std::vector<uint8_t> & message)
         return 0;
     }
 
-    if (message.size() == 0) {
+    if (size == 0) {
         return 0;
     }
 
-    return port->write_some(boost::asio::buffer(message, message.size()), ec);
-}
-
-uint8_t SerialPortService::calculateChecksum(std::vector<uint8_t> & message)
-{
-    uint8_t checksum = 0;
-
-     for(int i = 0; i < message.size(); i++)
-     {
-        checksum += message[i];
-     }
-
-     return checksum;
+    return port->write_some(boost::asio::buffer(message, size), ec);
 }
 
 void SerialPortService::BindMotorWheelFeedbackCallback(std::function<void(MotorWheelFeedback)> fn) {

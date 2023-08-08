@@ -41,9 +41,7 @@ namespace hoverboard_hardware_interface
         void read();
         void asyncRead();
 
-        int write(std::vector<uint8_t> &);
-
-        uint8_t calculateChecksum(std::vector<uint8_t> &);
+        int write(const char *, const int &);
 
         void BindMotorWheelFeedbackCallback(std::function<void(MotorWheelFeedback)>);
 
@@ -56,8 +54,6 @@ namespace hoverboard_hardware_interface
         uint16_t head_frame = 0;
         uint16_t msg_counter = 0;
         uint8_t msg_command = 0;
-
-        std::vector<uint8_t> usableReadBuffer;
 
         char prev_byte = 0;
         char* p{};

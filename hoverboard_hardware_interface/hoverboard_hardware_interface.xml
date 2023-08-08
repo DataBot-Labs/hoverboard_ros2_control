@@ -1,0 +1,9 @@
+<library path="hoverboard_hardware_interface">
+  <class name="hoverboard_hardware_interface/HoverboardHardwareInterface"
+         type="hoverboard_hardware_interface::HoverboardHardwareInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+        The hoverboard motors hardware interface for ros2_control
+    </description>
+  </class>
+</library>

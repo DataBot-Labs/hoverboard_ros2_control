@@ -75,7 +75,7 @@ namespace hoverboard_hardware_interface
                 
                 return hardware_interface::CallbackReturn::ERROR;
             }
-v
+
             if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
             {
                 RCLCPP_FATAL(
@@ -176,27 +176,17 @@ v
     {
         MotorWheelDriveControl motorWheelDriveControl;
 
+        const double speed = ((leftWheel.command / 0.10472) + (rightWheel.command / 0.10472)) / 2.0;
+        const double steer = ((leftWheel.command / 0.10472) - speed) * 2.0;
+
         // TODO: radius should be read from the urdf file, check calculations
-        motorWheelDriveControl.leftMotorParameter = (leftWheel.command * 0.085) * 1000;
-        motorWheelDriveControl.rightMotorParameter = (rightWheel.command * 0.085) * 1000;
+        motorWheelDriveControl.speed = (int16_t) (speed);
+        motorWheelDriveControl.steer = (int16_t) (steer);
+        motorWheelDriveControl.checksum = (uint16_t)(motorWheelDriveControl.head ^ motorWheelDriveControl.steer ^ motorWheelDriveControl.speed);
 
-        std::vector<uint8_t> msg;
+         RCLCPP_INFO(rclcpp::get_logger("SerialPortService"), "%i %i", motorWheelDriveControl.speed, motorWheelDriveControl.steer);
 
-        msg.push_back((motorWheelDriveControl.head & 0xff00) >> 8);
-        msg.push_back(motorWheelDriveControl.head & 0xff);
-        msg.push_back(motorWheelDriveControl.command);
-        msg.push_back(motorWheelDriveControl.address);
-        msg.push_back(motorWheelDriveControl.length);
-        msg.push_back((motorWheelDriveControl.rightMotorParameter & 0xff00) >> 8);
-        msg.push_back(motorWheelDriveControl.rightMotorParameter & 0xff);
-        msg.push_back((motorWheelDriveControl.leftMotorParameter & 0xff00) >> 8);
-        msg.push_back(motorWheelDriveControl.leftMotorParameter & 0xff);
-        msg.push_back(motorWheelDriveControl.functionConfiguration);
-        msg.push_back(motorWheelDriveControl.zero);
-        msg.push_back(serialPortService.calculateChecksum(msg));
-        msg.push_back(motorWheelDriveControl.end);
-
-        serialPortService.write(msg);
+        serialPortService.write((const char*) &motorWheelDriveControl, sizeof(MotorWheelDriveControl));
 
         return hardware_interface::return_type::OK;
     }

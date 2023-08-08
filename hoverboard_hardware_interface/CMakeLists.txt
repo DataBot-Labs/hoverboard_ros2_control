@@ -14,6 +14,20 @@ find_package(Boost REQUIRED COMPONENTS system) # thread regex
 
 ament_auto_find_build_dependencies()
 
+ament_auto_add_library(
+  serial_port_service SHARED
+  src/serial_port_service.cpp
+)
+
+ament_auto_add_library(
+  ${PROJECT_NAME} SHARED
+  src/hoverboard_hardware_interface.cpp
+)
+
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
+pluginlib_export_plugin_description_file(hardware_interface hoverboard_hardware_interface.xml)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
