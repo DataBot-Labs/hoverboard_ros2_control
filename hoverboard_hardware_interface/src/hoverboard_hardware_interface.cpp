@@ -16,10 +16,10 @@
 
 namespace hoverboard_hardware_interface
 {
-    hardware_interface::CallbackReturn HoverboardHardwareInterface::on_init(const hardware_interface::HardwareInfo & info)
+    hardware_interface::return_type HoverboardHardwareInterface::configure(const hardware_interface::HardwareInfo & info)
     {
-        if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
-            return hardware_interface::CallbackReturn::ERROR;
+        if (hardware_interface::SystemInterface::configure(info) != hardware_interface::return_type::OK) {
+            return hardware_interface::return_type::ERROR;
         }
 
         hardwareConfig.leftWheelJointName = info.hardware_parameters.at("left_wheel_joint_name");
@@ -44,7 +44,7 @@ namespace hoverboard_hardware_interface
                     rclcpp::get_logger("HoverboardHardwareInterface"),
                     "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(), joint.command_interfaces.size());
 
-                return hardware_interface::CallbackReturn::ERROR;
+                return hardware_interface::return_type::ERROR;
             }
 
             if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
@@ -54,7 +54,7 @@ namespace hoverboard_hardware_interface
                     "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
                     joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
                 
-                return hardware_interface::CallbackReturn::ERROR;
+                return hardware_interface::return_type::ERROR;
             }
 
             if (joint.state_interfaces.size() != 2)
@@ -63,7 +63,7 @@ namespace hoverboard_hardware_interface
                     rclcpp::get_logger("HoverboardHardwareInterface"),
                     "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(), joint.state_interfaces.size());
                 
-                return hardware_interface::CallbackReturn::ERROR;
+                return hardware_interface::return_type::ERROR;
             }
 
             if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
@@ -73,7 +73,7 @@ namespace hoverboard_hardware_interface
                     "Joint '%s' have '%s' as first state interface. '%s' expected.", joint.name.c_str(),
                     joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
                 
-                return hardware_interface::CallbackReturn::ERROR;
+                return hardware_interface::return_type::ERROR;
             }
 
             if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
@@ -83,11 +83,11 @@ namespace hoverboard_hardware_interface
                     "Joint '%s' have '%s' as second state interface. '%s' expected.", joint.name.c_str(),
                     joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
                 
-                return hardware_interface::CallbackReturn::ERROR;
+                return hardware_interface::return_type::ERROR;
             }
         }
 
-        return hardware_interface::CallbackReturn::SUCCESS;
+        return hardware_interface::return_type::OK;
     }
 
     std::vector<hardware_interface::StateInterface> HoverboardHardwareInterface::export_state_interfaces()
@@ -113,66 +113,53 @@ namespace hoverboard_hardware_interface
         return command_interfaces;
     }
 
-    hardware_interface::CallbackReturn HoverboardHardwareInterface::on_configure(const rclcpp_lifecycle::State &)
+    hardware_interface::return_type HoverboardHardwareInterface::start()
     {
+        RCLCPP_INFO(rclcpp::get_logger("HoverboardHardwareInterface"), "Activating... please wait a moment...");
+
         RCLCPP_INFO(rclcpp::get_logger("HoverboardHardwareInterface"), "Configuring... please wait a moment...");
 
         if (!serialPortService.connect(serialPortConfig.device, serialPortConfig.baudRate, serialPortConfig.timeout))
         {
-            return hardware_interface::CallbackReturn::ERROR;
+            return hardware_interface::return_type::ERROR;
         }
 
         serialPortService.BindMotorWheelFeedbackCallback(
             std::bind(&HoverboardHardwareInterface::motorWheelFeedbackCallback, this, std::placeholders::_1)
         );
 
-        return hardware_interface::CallbackReturn::SUCCESS;
+        hardware_interface::return_type::OK;
     }
 
-    hardware_interface::CallbackReturn HoverboardHardwareInterface::on_cleanup(const rclcpp_lifecycle::State &)
-    {
-        RCLCPP_INFO(rclcpp::get_logger("HoverboardHardwareInterface"), "Cleaning up... please wait a moment...");
-
-        if (!serialPortService.disconnect())
-        {
-            return hardware_interface::CallbackReturn::ERROR;
-        }
-
-        return hardware_interface::CallbackReturn::SUCCESS;
-    }
-
-    hardware_interface::CallbackReturn HoverboardHardwareInterface::on_activate(const rclcpp_lifecycle::State &)
-    {
-        // TODO: add some logic
-        RCLCPP_INFO(rclcpp::get_logger("HoverboardHardwareInterface"), "Activating... please wait a moment...");
-
-        return hardware_interface::CallbackReturn::SUCCESS;
-    }
-
-    hardware_interface::CallbackReturn HoverboardHardwareInterface::on_deactivate(const rclcpp_lifecycle::State &)
+    hardware_interface::return_type HoverboardHardwareInterface::stop()
     {
         // TODO: add some logic
         RCLCPP_INFO(rclcpp::get_logger("HoverboardHardwareInterface"), "Deactivating... please wait a moment...");
 
-        return hardware_interface::CallbackReturn::SUCCESS;
+        return hardware_interface::return_type::OK;
     }
 
-    hardware_interface::return_type HoverboardHardwareInterface::read(const rclcpp::Time &, const rclcpp::Duration & period)
+    hardware_interface::return_type HoverboardHardwareInterface::read()
     {
+        auto timeNew = std::chrono::system_clock::now();
+        std::chrono::duration<double> timeDifference = timeNew - timePrevious;
+        double periodSeconds = timeDifference.count();
+        timePrevious = timeNew;
+
         serialPortService.read();
 
         double lastPosition = leftWheel.position;
         leftWheel.position = leftWheel.calculateEncoderAngle();
-        leftWheel.velocity = (leftWheel.position - lastPosition) / period.seconds();
+        leftWheel.velocity = (leftWheel.position - lastPosition) / periodSeconds;
 
         lastPosition = rightWheel.position;
         rightWheel.position = rightWheel.calculateEncoderAngle();
-        rightWheel.velocity = (rightWheel.position - lastPosition) / period.seconds();
+        rightWheel.velocity = (rightWheel.position - lastPosition) / periodSeconds;
 
         return hardware_interface::return_type::OK;
     }
 
-    hardware_interface::return_type HoverboardHardwareInterface::write(const rclcpp::Time &, const rclcpp::Duration &)
+    hardware_interface::return_type HoverboardHardwareInterface::write()
     {
         MotorWheelDriveControl motorWheelDriveControl;
 
