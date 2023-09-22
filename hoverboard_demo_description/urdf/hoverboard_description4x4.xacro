@@ -3,8 +3,8 @@
 
     <xacro:include filename="materials.xacro" />
     <xacro:include filename="macros.xacro" />
-    <xacro:include filename="wheels.xacro" />
-    <xacro:include filename="ros2_control.xacro" />
+    <xacro:include filename="4x4wheels.xacro" />
+    <xacro:include filename="ros2_control4x4.xacro" />
 
     <xacro:property name="plate_radius" value="0.37" />
     <xacro:property name="plate_height" value="0.01" />
