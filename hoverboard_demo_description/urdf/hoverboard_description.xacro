@@ -45,12 +45,15 @@
         <child link="plate" />
     </joint>
 
-    <xacro:driving_wheel suffix="left" reflect="1"/>
-    <xacro:driving_wheel suffix="right" reflect="-1"/>
+    <xacro:driving_wheel suffix="front_left" reflect="1" position="0.3"/>
+    <xacro:driving_wheel suffix="front_right" reflect="-1" position="0.3"/>
 
-    <xacro:caster_wheel suffix="front" reflect="1" />
-    <xacro:caster_wheel suffix="back" reflect="-1" />
+    <xacro:driving_wheel suffix="back_left" reflect="1" position="-0.3"/>
+    <xacro:driving_wheel suffix="back_right" reflect="-1" position="-0.3"/>
 
-    <xacro:hoverboard_ros2_control name="Hoverboard" />
+    <!-- <xacro:caster_wheel suffix="front" reflect="1" />
+    <xacro:caster_wheel suffix="back" reflect="-1" /> -->
+
+    <xacro:hoverboard_ros2_control name="hoverboard" />
 
 </robot>

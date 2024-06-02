@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
     <!-- TODO: The model is made in a very simple form, it would be nice to make it a bit better. Is someone willing? -->
-    <xacro:macro name="driving_wheel" params="suffix reflect">
+    <xacro:macro name="driving_wheel" params="suffix reflect position">
         <link name="driving_wheel_${suffix}">
             <visual>
                 <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
@@ -25,7 +25,7 @@
             <axis xyz="0 1 0" rpy="0 0 0" />
             <parent link="base_link"/>
             <child link="driving_wheel_${suffix}"/>
-            <origin xyz="0 ${(plate_radius+driving_wheel_thickness+driving_wheel_base_gap-0.195)/2*reflect} 0.038" rpy="0 0 0"/>
+            <origin xyz="${position} ${(plate_radius+driving_wheel_thickness+driving_wheel_base_gap-0.195)/2*reflect} 0.038" rpy="0 0 0"/>
         </joint>
 
         <gazebo reference="driving_wheel_${suffix}">

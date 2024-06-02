@@ -108,6 +108,6 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         robot_controller_spawner,
         rviz_node,
-        joy_node,
-        teleop_twist_joy_node,
+        # joy_node,
+        # teleop_twist_joy_node,
     ])
