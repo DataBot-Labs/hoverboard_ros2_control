@@ -4,6 +4,12 @@ ROS2 Control hardware interface for Hoverboard motors. Implementation in C++ wit
 
 **Work is still in progress, we will be adding new features.**
 
+### Compatible distros
+
+- jazzy
+- humble
+- foxy (tested just a bit, separate branch, more tests on request)
+
 ### Requirements
 
 Hoverboard driver firmware: [ https://github.com/hoverboard-robotics/hoverboard-firmware-hack-FOC]( https://github.com/hoverboard-robotics/hoverboard-firmware-hack-FOC)
